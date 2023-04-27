@@ -66,6 +66,17 @@ func main() {
 			}
 			spans = append(spans, &span)
 
+			if len(spans) == 50 {
+				if err := client.UploadTraces(ctx, spans); err != nil {
+					log.Fatalf("failed to upload traces: %v", err)
+				}
+				spans = nil
+			}
+		}
+		if len(spans) > 0 {
+			if err := client.UploadTraces(ctx, spans); err != nil {
+				log.Fatalf("failed to upload traces: %v", err)
+			}
 		}
 		if err := scanner.Err(); err != nil {
 			return fmt.Errorf("problem reading trace file: %w", err)
@@ -74,10 +85,6 @@ func main() {
 		return nil
 	}); err != nil {
 		log.Fatalf("failed to parse traces in %q: %v", *traces, err)
-	}
-
-	if err := client.UploadTraces(ctx, spans); err != nil {
-		log.Fatalf("failed to upload traces: %v", err)
 	}
 
 	if err := client.Stop(context.Background()); err != nil {
